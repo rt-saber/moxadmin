@@ -4,18 +4,18 @@ import struct
 """
 message_type   - 1 byte
 message_length - 3 bytes
-reserved       - 4 bytes
-field1         - 4 bytes
-field2         - 4 bytes
-mac_address    - 4 bytes
-ip_address     - 4 bytes
+???
+mac_address    - -8 bytes
+ip_address     - -4 bytes
 
 Total of at least 24 bytes
-MAC is usually 6 bytes but it strips first two bytes. 
+MAC is usually 6 bytes but first two bytes are not used. 
 11:22:33:44:55 -> 33:44:55
+
+At the moment I am not sure what ip_address is used for, client does not seem to rely on it to display device's IP address.
 """
 
-class Proto:
+class Protocol:
 
     def __init__(self):
         
@@ -37,18 +37,38 @@ class Proto:
         self.mac_address = None
         self.ip_address = None
 
+        self.messages = {
+            1: b"\x01\x00\x00\x08\x00\x00\x00\x00",
+            2: b"\x16\x00\x00\x14\x00\x00\x00\x00\x10\x51\x00\x80\x10\x51\x00\x90\xe8\xc8\x73\xb0",
+            3: b"\x10\x00\x00\x14\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0",
+        }
 
-    def parse(self, data, debug = False):
 
-        message_type, message_length, reserved, field1, field2, mac_address, ip_address = struct.unpack_from("!B3s4s4s4s4s4s", data)
+    def parse(self, data, debug = False) -> None:
+
+        message_type, message_length_raw, reserved, field1, field2, mac_address, ip_address = struct.unpack_from("!B3s4s4s4s4s4s", data)
 
         self.message_type = message_type
-        self.message_length = message_length
+        self.message_length = message_length_raw
         self.reserved = reserved
         self.field1 = field1
         self.field2 = field2
         self.mac_address = mac_address
         self.ip_address = ip_address
 
-        if debug:
-            print(data)
+        self.message_length = int.from_bytes(message_length_raw, "big")
+
+        message = f"Type -> {self.message_type}\n"
+        message += f"Length -> {self.message_length}\n"
+        message += f"Reserved -> {self.reserved}\n"
+        message += f"Field 1 -> {self.field1}\n"
+        message += f"Field 2 -> {self.field2}\n"
+        message += f"MAC -> {self.mac_address}\n"
+        message += f"IP -> {self.ip_address}\n"
+
+        return message
+
+    
+    def message(self, id: int) -> bytes:
+
+        return self.messages[id]

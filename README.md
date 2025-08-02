@@ -9,17 +9,14 @@ My idea was to make a server listening on UDP port 4800, then connect to it usin
 
 This way I could actively see messages sent from the client to devices, I could also send a similar packet to a legitimate device and see what it answers as well as sending it back to client.
 
-## protocol
+Using struct is not ideal way to handle packets here, the packet structure varies too much.
+While for some packets MAC would 4 bytes (usually 6 bytes but first 2 bytes are ignored in this protocol) starting at offset 16 for some packets it would be at 22 for some others.
 
-```
-offset: |0|1-3|4-7|8-11|12-15|16-21|22-25
-meaning |message_type|len|?|?|?|mac_address|ip
-```
+Instead we know:
 
+- First byte -> message type
+- Second-to-third bytes -> Packet length
+- Last 4 bytes -> IP address
+- 4 bytes preceding the IP -> MAC address
 
-## packet order (msg_type)
-
-client -> 1
-device -> 129
-client -> 22
-device -> 150
+the last 4 bytes is the IP address, the 4 bytes
