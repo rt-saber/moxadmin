@@ -37,15 +37,46 @@ class Protocol:
         self.mac_address = None
         self.ip_address = None
 
-        self.messages = {
+        self.messages_client = {
             1: b"\x01\x00\x00\x08\x00\x00\x00\x00",
             2: b"\x16\x00\x00\x14\x00\x00\x00\x00\x10\x51\x00\x80\x10\x51\x00\x90\xe8\xc8\x73\xb0",
             3: b"\x10\x00\x00\x14\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0",
             4: b"NOT_IMPLEMENTED"
         }
 
+        self.messages_server = {
+            1: b"\x81\x00\x00\x18\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0\xc0\xa8\x01!",
+            2: b"\x96\x00\x00$\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0\x00\x00\x10\x02\x01\x00\x03\x00K\x02\x00\x00!\x00\x01\x01",
+            3: b"\x10\x00\x00\x14\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0",
+            4: b"NOT_IMPLEMENTED"
+        }
 
-    def parse(self, data, debug = False) -> None:
+
+    def parse_client(self, data) -> None:
+
+        self.message_type = data[0]
+        self.message_length = data[1:4]
+        self.message_length = int.from_bytes(self.message_length, "big")
+        
+        if self.message_length == 20:
+
+            self.mac_address_raw = data[-4:]
+            self.mac_address = ":".join(f"{b:02x}" for b in self.mac_address_raw)
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+            message += f"MAC -> {self.mac_address}\n"
+        
+            return message
+        
+        else:
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+        
+            return message
+
+    def parse_server(self, data) -> None:
 
         """
         message_type, message_length_raw, reserved, field1, field2, mac_address, ip_address = struct.unpack_from("!B3s4s4s4s4s4s", data)
@@ -136,6 +167,10 @@ class Protocol:
             return message
 
     
-    def message(self, id: int) -> bytes:
+    def message_client(self, id: int) -> bytes:
 
-        return self.messages[id]
+        return self.messages_client[id]
+    
+    def message_server(self, id: int) -> bytes:
+
+        return self.messages_server[id]

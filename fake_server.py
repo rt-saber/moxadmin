@@ -1,8 +1,9 @@
 import socket
-import base64
 
-class Proto:
-    def __init__(self, host: str, port: int):
+from protocol import Protocol
+
+class Server:
+    def __init__(self, host: str, port: int, protocolObj):
         
         self.host = host
         self.port = port
@@ -10,23 +11,35 @@ class Proto:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.host, self.port))
 
-    def receive(self) -> None:
+        self.protocol = protocolObj 
+        self.message = protocolObj.message_server
+
+    def send(self, message: bytes, addr, debug = False) -> None:
+
+        self.sock.sendto(message, addr)
+        if debug:
+            print(f"-> {message}")
+
+    def listen(self) -> None:
         
         while True:
             data, addr = self.sock.recvfrom(4096)
-            print(f"{addr[0]}:{addr[1]} -> {data}")
-            if data == b'\x01\x00\x00\x08\x00\x00\x00\x00':
-                message = b'\x81\x00\x00\x18\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8,\xa8Y\xc0\xa8\x00\x07'
-                self.sock.sendto(message, addr)
-            elif data == b'\x01\x00\x00\x14\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8,\xa8Y':
-                message = b'\x90\x00\x00<\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0TELEGESTION\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-                self.sock.sendto(message, addr)
+            print(f"<- {data}")
+            parsed = self.protocol.parse_client(data)
+            print(parsed)
+
+            if self.protocol.message_type == 1 and self.protocol.message_length == 8:
+                self.send(self.message(1), addr)
+
+            if self.protocol.message_type == 1 and self.protocol.message_length == 20:
+                self.send(self.message(2), addr)
 
 
 def main() -> None:
 
-    proto = Proto("0.0.0.0", 4800)
-    proto.receive()
+    protocol = Protocol()
+    server = Server("0.0.0.0", 4800, protocol)
+    server.listen()
 
 if __name__ == "__main__":
     main()

@@ -6,15 +6,15 @@ from protocol import Protocol
 
 class Client:
 
-    def __init__(self, host, port, protolObj):
+    def __init__(self, host, port, protocolObj):
         self.packet_stack = []
         self.host = host
         self.port = port
         self.peer = (host, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.protocol = protolObj 
-        self.message = protolObj.message
+        self.protocol = protocolObj 
+        self.message = protocolObj.message_client
 
 
     def send(self, message: bytes, debug = False) -> None:
@@ -31,7 +31,7 @@ class Client:
         while True:
             data, addr = self.sock.recvfrom(4096)
             print(f"<- {data}")
-            parsed = self.protocol.parse(data, debug = True)
+            parsed = self.protocol.parse_server(data)
             print(parsed)
 
             if self.protocol.message_type == 129:
