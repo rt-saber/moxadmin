@@ -40,6 +40,9 @@ class Client:
             if self.protocol.message_type == 150:
                 self.send(self.message(3))
 
+            if self.protocol.message_type == 144:
+                self.send(self.message(4))
+
 
 def main() -> None:
 

@@ -41,11 +41,13 @@ class Protocol:
             1: b"\x01\x00\x00\x08\x00\x00\x00\x00",
             2: b"\x16\x00\x00\x14\x00\x00\x00\x00\x10\x51\x00\x80\x10\x51\x00\x90\xe8\xc8\x73\xb0",
             3: b"\x10\x00\x00\x14\x00\x00\x00\x00\x10Q\x00\x80\x10Q\x00\x90\xe8\xc8s\xb0",
+            4: b"NOT_IMPLEMENTED"
         }
 
 
     def parse(self, data, debug = False) -> None:
 
+        """
         message_type, message_length_raw, reserved, field1, field2, mac_address, ip_address = struct.unpack_from("!B3s4s4s4s4s4s", data)
 
         self.message_type = message_type
@@ -55,18 +57,83 @@ class Protocol:
         self.field2 = field2
         self.mac_address = mac_address
         self.ip_address = ip_address
+        """
 
-        self.message_length = int.from_bytes(message_length_raw, "big")
+        self.message_type = data[0]
 
-        message = f"Type -> {self.message_type}\n"
-        message += f"Length -> {self.message_length}\n"
-        message += f"Reserved -> {self.reserved}\n"
-        message += f"Field 1 -> {self.field1}\n"
-        message += f"Field 2 -> {self.field2}\n"
-        message += f"MAC -> {self.mac_address}\n"
-        message += f"IP -> {self.ip_address}\n"
+        if self.message_type == 129:
 
-        return message
+            self.message_length = data[1:4]
+            self.mac_address_raw = data[-8:-4]
+            self.ip_address_raw = data[-4:]
+
+            self.message_length = int.from_bytes(self.message_length, "big")
+
+            self.mac_address = ":".join(f"{b:02x}" for b in self.mac_address_raw)
+            self.ip_address = ".".join(str(b) for b in self.ip_address_raw)
+
+            self.unknown = data[4:-8]
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+            message += f"Unknown -> {self.unknown.hex()}\n"
+            message += f"MAC -> {self.mac_address}\n"
+            message += f"IP -> {self.ip_address}\n"
+
+            return message
+
+        elif self.message_type == 150:
+            
+            self.message_length = data[1:4]
+            self.message_length = int.from_bytes(self.message_length, "big")
+
+            self.unknown1 = data[4:16]
+
+            self.mac_address_raw = data[16:20]
+            self.mac_address = ":".join(f"{b:02x}" for b in self.mac_address_raw)
+
+            self.unknown2 = data[20:]
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+            message += f"Unknown1 -> {self.unknown1.hex()}\n"
+            message += f"MAC -> {self.mac_address}\n"
+            message += f"Unknown2 -> {self.unknown2.hex()}\n"
+
+            return message
+        
+        elif self.message_type == 144:
+
+            self.message_length = data[1:4]
+            self.message_length = int.from_bytes(self.message_length, "big")
+
+            self.unknown1 = data[4:16]
+
+            self.mac_address_raw = data[16:20]
+            self.mac_address = ":".join(f"{b:02x}" for b in self.mac_address_raw)
+
+            self.device_name = data[20:]
+            self.device_name = data[20:].split(b"\x00")[0]
+            self.padding = b"\x00".join(data[20:].split(b"\x00")[1:])
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+            message += f"Unknown1 -> {self.unknown1.hex()}\n"
+            message += f"MAC -> {self.mac_address}\n"
+            message += f"Device name -> {self.device_name}\n"
+            message += f"Padding -> {self.padding.hex()}\n"
+
+            return message
+
+        else:
+
+            self.message_length = data[1:4]
+            self.message_length = int.from_bytes(self.message_length, "big")
+
+            message = f"Type -> {self.message_type}\n"
+            message += f"Length -> {self.message_length}\n"
+
+            return message
 
     
     def message(self, id: int) -> bytes:

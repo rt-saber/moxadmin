@@ -12,7 +12,7 @@ This way I could actively see messages sent from the client to devices, I could 
 Using struct is not ideal way to handle packets here, the packet structure varies too much.
 While for some packets MAC would 4 bytes (usually 6 bytes but first 2 bytes are ignored in this protocol) starting at offset 16 for some packets it would be at 22 for some others.
 
-Instead we know:
+Instead we know that in some packets:
 
 - First byte -> message type
 - Second-to-third bytes -> Packet length
@@ -20,3 +20,19 @@ Instead we know:
 - 4 bytes preceding the IP -> MAC address
 
 the last 4 bytes is the IP address, the 4 bytes
+
+---
+
+`fake_client.py` -> This simulate the legitimate Moxa NPort Administrator client by sending similar packets to legitimate devices
+`fake_server.py` -> This simulate a legitimate Moxa NPort device by sending back to client packets a real Moxa device would send
+`protocol.py`    -> This is where most of the job is done
+
+---
+
+## Message type 144:
+
+Device name at offset 20, remaining bytes should all be null?
+Is length always 60?
+Is device name always at offset 20?
+What's the bytes between length and device name?
+
