@@ -19,12 +19,14 @@ Instead we know that in some packets:
 - Last 4 bytes -> IP address
 - 4 bytes preceding the IP -> MAC address
 
-the last 4 bytes is the IP address, the 4 bytes
+the last 4 bytes is the IP address
 
 ---
 
 `fake_client.py` -> This simulate the legitimate Moxa NPort Administrator client by sending similar packets to legitimate devices
+
 `fake_server.py` -> This simulate a legitimate Moxa NPort device by sending back to client packets a real Moxa device would send
+
 `protocol.py`    -> This is where most of the job is done
 
 ---
