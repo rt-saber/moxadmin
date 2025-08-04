@@ -26,7 +26,9 @@ class Client:
 
     def connect(self) -> None:
         
-        self.send(self.message(1))
+        debug=True
+
+        self.send(self.message(1), debug=debug)
 
         while True:
             data, addr = self.sock.recvfrom(4096)
@@ -35,13 +37,13 @@ class Client:
             print(parsed)
 
             if self.protocol.message_type == 129:
-                self.send(self.message(2))
+                self.send(self.message(2), debug=debug)
 
             if self.protocol.message_type == 150:
-                self.send(self.message(3))
+                self.send(self.message(3), debug=debug)
 
             if self.protocol.message_type == 144:
-                self.send(self.message(4))
+                self.send(self.message(4), debug=debug)
 
 
 def main() -> None:
